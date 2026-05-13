@@ -1,0 +1,260 @@
+{
+    "null": [
+        {
+            "symptoms": [
+                "blurred_and_distorted_vision",
+                "yellowish_skin"
+            ],
+            "result": [
+                {
+                    "disease": "Hepatitis D",
+                    "prob": 7.95
+                },
+                {
+                    "disease": "Migraine",
+                    "prob": 7.88
+                },
+                {
+                    "disease": "Jaundice",
+                    "prob": 7.1
+                }
+            ],
+            "time": "2026-04-08 21:48:06.694753"
+        }
+    ],
+    "Kritika": [
+        {
+            "symptoms": [
+                "sunken_eyes",
+                "throat_irritation"
+            ],
+            "result": [
+                {
+                    "disease": "Common Cold",
+                    "prob": 10.21
+                },
+                {
+                    "disease": "Gastroenteritis",
+                    "prob": 8.39
+                },
+                {
+                    "disease": "Bronchial Asthma",
+                    "prob": 2.44
+                }
+            ],
+            "time": "2026-04-08 21:55:30.188037"
+        },
+        {
+            "symptoms": [
+                "yellowish_skin",
+                "irregular_sugar_level"
+            ],
+            "result": [
+                {
+                    "disease": "Hepatitis D",
+                    "prob": 9.07
+                },
+                {
+                    "disease": "Jaundice",
+                    "prob": 8.09
+                },
+                {
+                    "disease": "Chronic cholestasis",
+                    "prob": 8.09
+                }
+            ],
+            "time": "2026-04-08 21:55:51.853166"
+        },
+        {
+            "symptoms": [
+                "throat_irritation",
+                "blurred_and_distorted_vision"
+            ],
+            "result": [
+                {
+                    "disease": "Migraine",
+                    "prob": 13.18
+                },
+                {
+                    "disease": "Hypoglycemia",
+                    "prob": 10.29
+                },
+                {
+                    "disease": "Diabetes",
+                    "prob": 10.29
+                }
+            ],
+            "time": "2026-04-08 21:56:29.833466"
+        },
+        {
+            "symptoms": [
+                "increased_appetite"
+            ],
+            "result": [
+                {
+                    "disease": "Diabetes",
+                    "prob": 17.63
+                },
+                {
+                    "disease": "Hepatitis D",
+                    "prob": 2.51
+                },
+                {
+                    "disease": "Migraine",
+                    "prob": 2.49
+                }
+            ],
+            "time": "2026-04-08 23:16:34.613301"
+        },
+        {
+            "symptoms": [
+                "rusty_sputum",
+                "yellow_urine",
+                "anxiety",
+                "weakness_of_one_body_side"
+            ],
+            "result": [
+                {
+                    "disease": "Paralysis (brain hemorrhage)",
+                    "prob": 9.81
+                },
+                {
+                    "disease": "Pneumonia",
+                    "prob": 8.47
+                },
+                {
+                    "disease": "Hypoglycemia",
+                    "prob": 7.43
+                }
+            ],
+            "time": "2026-04-08 23:19:55.519419"
+        },
+        {
+            "symptoms": [
+                "rusty_sputum"
+            ],
+            "result": [
+                {
+                    "disease": "Pneumonia",
+                    "prob": 17.13
+                },
+                {
+                    "disease": "Hepatitis D",
+                    "prob": 2.52
+                },
+                {
+                    "disease": "Migraine",
+                    "prob": 2.51
+                }
+            ],
+            "time": "2026-04-08 23:20:18.324541"
+        },
+        {
+            "symptoms": [
+                "throat_irritation"
+            ],
+            "results": [
+                {
+                    "disease": "Common Cold",
+                    "prob": 14.69
+                },
+                {
+                    "disease": "Hepatitis D",
+                    "prob": 2.58
+                },
+                {
+                    "disease": "Migraine",
+                    "prob": 2.57
+                }
+            ],
+            "time": "2026-04-08 23:30:24.337430"
+        },
+        {
+            "symptoms": [
+                "irregular_sugar_level",
+                "sunken_eyes"
+            ],
+            "results": [
+                {
+                    "disease": "Diabetes",
+                    "prob": 13.29
+                },
+                {
+                    "disease": "Gastroenteritis",
+                    "prob": 8.16
+                },
+                {
+                    "disease": "Bronchial Asthma",
+                    "prob": 2.38
+                }
+            ],
+            "time": "2026-04-08 23:31:13.601432"
+        },
+        {
+            "symptoms": [
+                "throat_irritation",
+                "sunken_eyes"
+            ],
+            "results": [
+                {
+                    "disease": "Common Cold",
+                    "prob": 10.21
+                },
+                {
+                    "disease": "Gastroenteritis",
+                    "prob": 8.39
+                },
+                {
+                    "disease": "Bronchial Asthma",
+                    "prob": 2.44
+                }
+            ],
+            "time": "2026-04-08 23:44:42.485240"
+        },
+        {
+            "symptoms": [
+                "increased_appetite",
+                "irregular_sugar_level"
+            ],
+            "results": [
+                {
+                    "disease": "Diabetes",
+                    "prob": 56.87
+                },
+                {
+                    "disease": "GERD",
+                    "prob": 1.27
+                },
+                {
+                    "disease": "Bronchial Asthma",
+                    "prob": 1.27
+                }
+            ],
+            "time": "2026-04-08 23:49:46.484471"
+        }
+    ],
+    "sauravjha4575@gmail.com": [
+        {
+            "symptoms": [
+                "throat_irritation",
+                "indigestion",
+                "ulcers_on_tongue"
+            ],
+            "results": [
+                {
+                    "disease": "GERD",
+                    "prob": 11.81
+                },
+                {
+                    "disease": "Peptic ulcer diseae",
+                    "prob": 11.6
+                },
+                {
+                    "disease": "Migraine",
+                    "prob": 11.56
+                }
+            ],
+            "time": "2026-05-12 23:28:30.357104"
+        }
+    ]
+}

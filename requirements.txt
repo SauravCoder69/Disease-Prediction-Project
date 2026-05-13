@@ -1,0 +1,15 @@
+streamlit
+pandas
+numpy
+scikit-learn
+matplotlib
+# Medical Report Analyzer (optional for that page only)
+pdfplumber
+PyPDF2
+pytesseract
+Pillow
+# Scanned PDF/image OCR without Tesseract (optional; first install may download PyTorch + models)
+easyocr
+opencv-python-headless
+
+# Run app: python -m streamlit run app_nv.py
