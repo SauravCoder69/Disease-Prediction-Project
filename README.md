@@ -84,7 +84,7 @@ Disease-Prediction-System/
 
 ## 👩‍💻 Author
 
-**Riya Kumari**
+**Saurav Kumar**
 
 ---
 
