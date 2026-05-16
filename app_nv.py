@@ -169,135 +169,257 @@ _inject_clinical_ui_styles()
 
 
 def _render_report_analyzer_page():
-    # Report Analyzer: UI + orchestration only — disease ML / auth / chatbot untouched.
+    # Report Analyzer: PRODUCTION-READY UI + orchestration
+    # Disease ML / auth / chatbot remain untouched
+    
     try:
         import report_analyzer_helpers as ra
     except ImportError:
         st.error(
-            "Report Analyzer optional dependencies are missing. Install them, then restart the app."
+            "⚠️ Report Analyzer dependencies missing. Install and restart:"
         )
-        st.code("pip install pdfplumber PyPDF2 pytesseract Pillow", language="bash")
+        st.code(
+            "pip install pdfplumber PyPDF2 pytesseract Pillow easyocr opencv-python-headless PyMuPDF pdf2image scipy scikit-image",
+            language="bash",
+        )
+        st.info(
+            "**For better OCR without installing system libraries:** "
+            "First EasyOCR run auto-downloads ~100MB+ models. Or install Tesseract separately: "
+            "https://github.com/UB-Mannheim/tesseract/wiki"
+        )
         return
 
+    # ===== HEADER =====
     st.markdown(
         '<p class="clinical-section-title">📄 Medical Report Analyzer</p>',
         unsafe_allow_html=True,
     )
     st.caption(
-        "Upload a lab PDF/image or paste text. Values are parsed with heuristics and compared to "
-        "demo reference bands — not a medical device; confirm all results with your clinician."
+        "Upload lab reports (PDF/JPG/PNG/TXT) for automatic text extraction and lab value parsing. "
+        "Heuristic parsing + demo reference bands only — NOT a medical device; verify all results with clinician."
     )
 
-    uploaded = st.file_uploader(
-        "Upload report (PDF, JPG, PNG, or TXT)",
-        type=["pdf", "png", "jpg", "jpeg", "txt"],
-        help="Maximum 15 MB. Files stay in memory for this session only.",
-    )
-    pasted = st.text_area(
-        "Or paste report text",
-        height=140,
-        placeholder="Optional — same analysis as a .txt upload.",
-        key="report_analyzer_paste",
+    # ===== UPLOAD SECTION =====
+    col_upload, col_paste = st.columns([1, 1])
+    
+    with col_upload:
+        st.markdown("**📁 Upload File**")
+        uploaded = st.file_uploader(
+            "Select report (PDF, JPG, PNG, TXT)",
+            type=["pdf", "png", "jpg", "jpeg", "txt"],
+            help="Max 15 MB. Supports text-based & scanned PDFs.",
+            key="report_uploader",
+        )
+
+    with col_paste:
+        st.markdown("**Or 📝 Paste Text**")
+        pasted = st.text_area(
+            "Paste lab report text directly",
+            height=120,
+            placeholder="E.g., Hemoglobin: 13.5 g/dL\nGlucose: 95 mg/dL\n...",
+            key="report_analyzer_paste",
+        )
+
+    # ===== ANALYSIS BUTTON =====
+    analyze_btn = st.button(
+        "🔍 Analyze Report",
+        type="primary",
+        use_container_width=True,
+        key="report_analyzer_btn",
     )
 
-    if st.button("Analyze report", type="primary", use_container_width=True, key="report_analyzer_btn"):
-        if uploaded is not None:
-            data = uploaded.getvalue()
-            filename = uploaded.name or "report"
-            mime = uploaded.type or "application/octet-stream"
-        elif pasted and pasted.strip():
-            data = pasted.strip().encode("utf-8")
-            filename = "pasted_report.txt"
-            mime = "text/plain"
-        else:
-            st.warning("Please upload a file or paste report text.")
+    if not analyze_btn:
+        return
+
+    # ===== INPUT VALIDATION =====
+    if uploaded is not None:
+        data = uploaded.getvalue()
+        filename = uploaded.name or "report"
+        mime = uploaded.type or "application/octet-stream"
+    elif pasted and pasted.strip():
+        data = pasted.strip().encode("utf-8")
+        filename = "pasted_report.txt"
+        mime = "text/plain"
+    else:
+        st.warning("⚠️ Please upload a file or paste text to analyze.")
+        return
+
+    # ===== PROGRESS TRACKING =====
+    status_placeholder = st.empty()
+    progress_bar = st.progress(0)
+    
+    try:
+        # Validate bytes
+        status_placeholder.info("📋 Validating file...")
+        progress_bar.progress(10)
+        
+        verr = ra.validate_upload_bytes(data)
+        if verr:
+            progress_bar.empty()
+            status_placeholder.empty()
+            st.error(f"❌ Validation failed: {verr}")
             return
+        
+        # Extract text
+        status_placeholder.info("🔄 Extracting text from file...")
+        progress_bar.progress(30)
+        
+        text, xerr = ra.run_extraction(data, mime, filename)
+        progress_bar.progress(55)
+        
+        # Check extraction result
+        if not text or len(text.strip()) < 10:
+            progress_bar.empty()
+            status_placeholder.empty()
+            error_msg = xerr or "No text could be extracted."
+            st.error(f"❌ {error_msg}")
+            
+            # Provide suggestions
+            with st.expander("💡 Troubleshooting tips"):
+                st.markdown("""
+- **For scanned PDFs:** Ensure image quality is clear (high resolution/DPI)
+- **For handwritten:** Try pasting key values as text instead
+- **For format issues:** Verify the file is actually a valid PDF/image
+- **For OCR:** If EasyOCR not installed, run `pip install easyocr`
+- **Tesseract:** Install from https://github.com/UB-Mannheim/tesseract/wiki for better OCR
+                """)
+            return
+        
+        # Show extraction note if any
+        if xerr and xerr.startswith("Used"):
+            status_placeholder.info(f"ℹ️ {xerr}")
+        
+        # Parse lab findings
+        status_placeholder.info("🔍 Parsing lab values...")
+        progress_bar.progress(75)
+        
+        findings = ra.parse_lab_findings(text)
+        summary = ra.build_health_summary(findings)
+        
+        progress_bar.progress(95)
+        
+        # Complete
+        progress_bar.progress(100)
+        import time
+        time.sleep(0.3)
+        progress_bar.empty()
+        status_placeholder.empty()
+        
+        st.success(f"✅ Analysis complete! Extracted {len(text)} characters, found {len(findings)} lab parameter(s).")
+    
+    except Exception as e:
+        progress_bar.empty()
+        status_placeholder.empty()
+        st.error(f"❌ Unexpected error: {str(e)[:200]}")
+        with st.expander("Error details"):
+            st.code(str(e))
+        return
 
-        prog = st.progress(0)
-        with st.spinner("Analyzing report - extracting text and parsing values..."):
-            verr = ra.validate_upload_bytes(data)
-            if verr:
-                prog.empty()
-                st.error(verr)
-                return
+    # ===== DISPLAY RESULTS =====
+    
+    # 1. EXTRACTED TEXT PREVIEW
+    with st.expander("📄 Extracted text preview (truncated)", expanded=False):
+        st.text_area(
+            "Raw extracted text:",
+            value=text[:10000] + ("...\n[truncated]" if len(text) > 10000 else ""),
+            height=250,
+            disabled=True,
+            key="text_preview",
+        )
 
-            prog.progress(25)
-            text, xerr = ra.run_extraction(data, mime, filename)
-            prog.progress(55)
-            if not text or not text.strip():
-                prog.empty()
-                st.error(xerr or "No text could be extracted. Try another file format or a clearer scan.")
-                return
-            if xerr:
-                if xerr.startswith("Used "):
-                    st.info(xerr)
-                else:
-                    st.warning(xerr)
+    # 2. LAB PARAMETERS
+    st.markdown("### 🧪 Lab Parameters")
+    
+    if not findings:
+        st.info(
+            "ℹ️ No recognized lab parameters detected. "
+            "This could mean:\n"
+            "- Parameter names don't match expected formats\n"
+            "- Values are unclear (try OCR on a clearer image)\n"
+            "- Units are non-standard\n\n"
+            "Try pasting specific lab lines (e.g., 'Hemoglobin: 13.5 g/dL')"
+        )
+    else:
+        # Metric grid (3 columns)
+        ncols = 3
+        rows = (len(findings) + ncols - 1) // ncols
+        idx = 0
+        
+        for _r in range(rows):
+            cols = st.columns(ncols)
+            for c in range(ncols):
+                if idx >= len(findings):
+                    break
+                
+                f = findings[idx]
+                idx += 1
+                
+                # Determine delta color
+                st_cl = {
+                    "Normal": "normal",
+                    "High": "inverse",
+                    "Low": "off",
+                    "Unknown": "off",
+                }.get(f.status, "off")
+                
+                with cols[c]:
+                    st.metric(
+                        label=f.label,
+                        value=f.value_display,
+                        delta=f.status,
+                        delta_color=st_cl,
+                    )
+                    st.caption(f.note)
 
-            findings = ra.parse_lab_findings(text)
-            summary = ra.build_health_summary(findings)
-            prog.progress(90)
-        prog.progress(100)
-        prog.empty()
-
-        with st.expander("Extracted text preview (truncated)", expanded=False):
-            st.text(text[:12000] + ("..." if len(text) > 12000 else ""))
-
-        st.markdown("##### Lab parameters")
-        if not findings:
-            st.info("No supported parameters detected. Check spelling, units, or try OCR on a sharper image.")
-        else:
-            ncols = 3
-            rows = (len(findings) + ncols - 1) // ncols
-            idx = 0
-            for _r in range(rows):
-                cols = st.columns(ncols)
-                for c in range(ncols):
-                    if idx >= len(findings):
-                        break
-                    f = findings[idx]
-                    idx += 1
-                    st_cl = {
-                        "Normal": "normal",
-                        "High": "inverse",
-                        "Low": "off",
-                        "Unknown": "off",
-                    }.get(f.status, "off")
-                    with cols[c]:
-                        st.metric(f.label, f.value_display, delta=f.status, delta_color=st_cl)
-                        st.caption(f.note)
-
-            st.markdown("##### Dashboard view")
-            for f in findings:
-                pill = {
-                    "Normal": "report-pill-normal",
-                    "High": "report-pill-high",
-                    "Low": "report-pill-low",
-                    "Unknown": "report-pill-unknown",
-                }.get(f.status, "report-pill-unknown")
-                st_class = {
-                    "Normal": "report-st-normal",
-                    "High": "report-st-high",
-                    "Low": "report-st-low",
-                    "Unknown": "report-st-unknown",
-                }.get(f.status, "report-st-unknown")
-                st.markdown(
-                    f"""
+        # Card-based detailed view
+        st.markdown("### 📊 Detailed Results")
+        
+        for f in findings:
+            # Status styling
+            pill_class = {
+                "Normal": "report-pill-normal",
+                "High": "report-pill-high",
+                "Low": "report-pill-low",
+                "Unknown": "report-pill-unknown",
+            }.get(f.status, "report-pill-unknown")
+            
+            st_class = {
+                "Normal": "report-st-normal",
+                "High": "report-st-high",
+                "Low": "report-st-low",
+                "Unknown": "report-st-unknown",
+            }.get(f.status, "report-st-unknown")
+            
+            # HTML card
+            st.markdown(
+                f"""
 <div class="report-finding-card {st_class}">
   <h4>{html.escape(f.label)}</h4>
   <div class="report-val">{html.escape(f.value_display)}</div>
-  <span class="report-pill {pill}">{html.escape(f.status)}</span>
-  <p class="clinical-muted" style="margin-top:0.5rem;margin-bottom:0;">{html.escape(f.note)}</p>
+  <span class="report-pill {pill_class}">{html.escape(f.status)}</span>
+  <p class="clinical-muted" style="margin-top:0.5rem;margin-bottom:0;">
+    {html.escape(f.note)}
+  </p>
 </div>
 """,
-                    unsafe_allow_html=True,
-                )
+                unsafe_allow_html=True,
+            )
 
-        st.markdown("##### Health summary (plain language)")
-        st.markdown(
-            f'<div class="report-summary-box"><p style="margin:0;line-height:1.55;color:#334155;">{html.escape(summary)}</p></div>',
-            unsafe_allow_html=True,
-        )
+    # 3. HEALTH SUMMARY
+    st.markdown("### 📋 Analysis Summary")
+    
+    st.markdown(
+        f'<div class="report-summary-box"><p style="margin:0;line-height:1.55;color:#334155;">{html.escape(summary)}</p></div>',
+        unsafe_allow_html=True,
+    )
+
+    # 4. DISCLAIMER
+    st.markdown("---")
+    st.caption(
+        "⚠️ **DISCLAIMER:** This tool uses heuristic pattern matching and demo reference bands for educational purposes only. "
+        "It is NOT a medical device and should NOT be used for clinical diagnosis. "
+        "Always consult with a qualified healthcare professional for accurate interpretation of medical tests."
+    )
 
 
 # ================= LOAD MODEL =================

@@ -255,6 +255,27 @@
                 }
             ],
             "time": "2026-05-12 23:28:30.357104"
+        },
+        {
+            "symptoms": [
+                "yellowing_of_eyes",
+                "unsteadiness"
+            ],
+            "results": [
+                {
+                    "disease": "Hepatitis D",
+                    "prob": 9.76
+                },
+                {
+                    "disease": "hepatitis A",
+                    "prob": 8.13
+                },
+                {
+                    "disease": "Hepatitis C",
+                    "prob": 8.0
+                }
+            ],
+            "time": "2026-05-14 00:26:10.877897"
         }
     ]
 }
